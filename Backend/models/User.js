@@ -16,12 +16,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     min: 3,
     max: 20,
-    required: true,
+   
   },
   email: {
     type: String,
     lowercase: true,
-    required: true,
+   unique:true,
     match: [emailRegex, "Please provide a valid email address"],
   },
   emailOpt: {

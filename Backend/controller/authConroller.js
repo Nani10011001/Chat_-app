@@ -1,4 +1,4 @@
-import { success } from "zod";
+
 import { User } from "../models/User.js";
 import otpGenerator from "../utils/otpGenerator.js";
 import response from "../utils/responseHandeler.js";
@@ -6,7 +6,7 @@ import { sendotpEmail } from "../services/emailServices.js";
 import { sendOtpPhoneNumber, twilioverifyOtp } from "../services/twilloservice.js";
 import { jwtTokenGenerate } from "../utils/jwtTokenGenerate.js";
 import { uploadFileToCloudinary } from "../config/cloundinary.js";
-
+import { Conversation } from "../models/Conversation.js";
 export const sendOTP = async (req, res) => {
   const { phoneNumber, phoneSuffix, email} = req.body;
   const otp = otpGenerator();
@@ -65,8 +65,11 @@ export const verifyOtp=async(req,res)=>{
       if(!phoneNumber || !phoneSuffix){
         return response(res,400,"phone number and phone suffix is needed")
     }
+
         const fullPhoneNumber=`${phoneSuffix}${phoneNumber}`
+
         user=await User.findOne({phoneNumber})
+        
          if(!user){
       return response(res,400,"user not found")
      } 
@@ -74,6 +77,8 @@ export const verifyOtp=async(req,res)=>{
      if(result.status !=="approved"){
       return response(res,400,"Invalid otp")
      }
+
+
      user.isVerified=true
      await user.save()
      const token= jwtTokenGenerate(user._id)
@@ -137,6 +142,40 @@ export const logout=async(req,res)=>{
     return response(res,200,"logout successfully")
   } catch (error) {
     console.error(error)
+    return response(res,500,"internal server error")
+  }
+}
+export const getAllUser=async(req,res)=>{
+  const loggedInUser=req.user.userId
+  // getting user info thing
+  try{
+    // only getting the other user into things except the loogineduser things 
+    //taking the profile info of the user like username profilePicture and isObline lastseen
+  const users=await User.find({_id:{$ne:loggedInUser}}).select(
+    
+      "username profilePicture  isOnline lastSeen  phoneSuffix   phoneNumber about "
+    
+  ).lean();
+
+  const userWithConverstion= await Promise.all(
+    users.map(async(user)=>{
+      const query = { participants: { $all: [loggedInUser, user?._id] } };
+      const conversation = await Conversation.findOne(query)
+        .populate({ path: "lastMessage", select: "username email content createdAt sender receiver" })
+        .lean();
+      
+      return {
+        ...user,
+        conversation: conversation || null
+      }
+    })
+  )
+ const result=userWithConverstion
+ console.log("conversation: ",result)
+  return response(res,200,"users retrived successfully",userWithConverstion)
+
+  }catch(error){
+console.error(error)
     return response(res,500,"internal server error")
   }
 }

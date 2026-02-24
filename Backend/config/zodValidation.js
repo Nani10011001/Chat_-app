@@ -8,13 +8,13 @@ const envSchema=z.object({
     ACCOUNT_SID:z.string().min(1,"---ACCOUNT_SID-- should be string"),
     JWT_TOKEN:z.string().min(13,"---JWT_TOKEN--- its should be string")
 })
-const envparse=envSchema.safeParse(process.env)
-if(!envparse){
-    console.log("---ENV varible validation is failed")
-    envSchema.error.issues.forEach(err => {
-      console.log(`${err.path.join('.')}: `,err.message)
-        
-    });
-    process.exit(1)
+const envparse = envSchema.safeParse(process.env)
+if (!envparse.success) {
+  console.log("---ENV variable validation failed---")
+  envparse.error.issues.forEach((err) => {
+    console.log(`${err.path.join('.')}: `, err.message)
+  })
+  process.exit(1)
 }
-export const env=envparse.data
+
+export const env = envparse.data

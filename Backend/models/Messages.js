@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 
+
 const messageSchema=new mongoose.Schema({
     conversation:{
         type:mongoose.Schema.Types.ObjectId,
@@ -12,25 +13,25 @@ const messageSchema=new mongoose.Schema({
         ref:"User",
         required:true
     },
-    reciever:{
+    receiver:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
         required:true
     },
-    context:{
+    content:{
         type:String
     },
     imageorVedio:{
         type:String
 
     },
-    contextType:{
+    contentType:{
         type:String,
         enums:["video","image","text"]
     },
     reactions:[
         {
-            user:mongoose.Schema.Types.ObjectId,
+            type:mongoose.Schema.Types.ObjectId,
             ref:"User",
             emoji:String
         }
